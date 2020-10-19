@@ -5,7 +5,10 @@ const io = require('socket.io')(http);
 const connectedPatients = {};
 const connectedExaminers = {};
 
+console.clear();
+
 const logClients = () => {
+  console.clear();
   console.log('Patients: ' + Object.keys(connectedPatients));
   console.log('Examiners: ' + Object.keys(connectedExaminers));
 };
