@@ -8,10 +8,10 @@ const PORT = process.env.PORT || 4000;
 const connectedPatients = {};
 const connectedExaminers = {};
 
-// console.clear();
+console.clear();
 
 const logClients = () => {
-  // console.clear();
+  console.clear();
   console.log('Patients: ' + Object.keys(connectedPatients));
   console.log('Examiners: ' + Object.keys(connectedExaminers));
 };
@@ -33,18 +33,17 @@ io.on('connection', (socket) => {
     logClients();
   });
 
-  socket.on('getPatientWithSessionID', (patientSessionID, examinerID, acknowledge) => {
+  socket.on('getPatientWithSessionID', (patientSessionID, examiner, returnPatient) => {
     let patient = connectedPatients[patientSessionID];
     if (patient) {
       let firstName = patient.firstName;
       let lastName = patient.lastName;
 
-      // notify patient
-      patient.socket.emit('notify', examinerID);
+      patient.socket.emit('requestFromExaminer', examiner);
 
-      acknowledge({ firstName, lastName, patientSessionID });
+      returnPatient({ firstName, lastName, sessionID });
     } else {
-      acknowledge(null);
+      returnPatient(null);
     }
   });
 
