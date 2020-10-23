@@ -1,14 +1,17 @@
 const app = require('express')();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+io.origins('*:*');
+
+const PORT = process.env.PORT || 4000;
 
 const connectedPatients = {};
 const connectedExaminers = {};
 
-console.clear();
+// console.clear();
 
 const logClients = () => {
-  console.clear();
+  // console.clear();
   console.log('Patients: ' + Object.keys(connectedPatients));
   console.log('Examiners: ' + Object.keys(connectedExaminers));
 };
@@ -16,22 +19,22 @@ const logClients = () => {
 io.on('connection', (socket) => {
   console.log(`${socket.id} connected`);
 
-  const shortID = socket.id.substring(0, 5).toLowerCase(); // first 5 chars
+  const sessionID = socket.id.substring(0, 5).toLowerCase(); // first 5 chars
 
   socket.on('patientRegistration', (firstName, lastName) => {
-    connectedPatients[shortID] = { firstName, lastName, socket };
-    delete connectedExaminers[shortID];
+    connectedPatients[sessionID] = { firstName, lastName, socket };
+    delete connectedExaminers[sessionID];
     logClients();
   });
 
   socket.on('examinerRegistration', (firstName, lastName) => {
-    connectedExaminers[shortID] = { firstName, lastName, socket };
-    delete connectedPatients[shortID];
+    connectedExaminers[sessionID] = { firstName, lastName, socket };
+    delete connectedPatients[sessionID];
     logClients();
   });
 
-  socket.on('getPatientWithShortID', (shortID, examinerID, acknowledge) => {
-    let patient = connectedPatients[shortID];
+  socket.on('getPatientWithSessionID', (patientSessionID, examinerID, acknowledge) => {
+    let patient = connectedPatients[patientSessionID];
     if (patient) {
       let firstName = patient.firstName;
       let lastName = patient.lastName;
@@ -39,7 +42,7 @@ io.on('connection', (socket) => {
       // notify patient
       patient.socket.emit('notify', examinerID);
 
-      acknowledge({ firstName, lastName, shortID });
+      acknowledge({ firstName, lastName, patientSessionID });
     } else {
       acknowledge(null);
     }
@@ -48,12 +51,12 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`${socket.id} disconnected`);
 
-    delete connectedPatients[shortID];
-    delete connectedExaminers[shortID];
+    delete connectedPatients[sessionID];
+    delete connectedExaminers[sessionID];
     logClients();
   });
 });
 
-http.listen(4000, () => {
+http.listen(PORT, () => {
   console.log('listening on port 4000');
 });
